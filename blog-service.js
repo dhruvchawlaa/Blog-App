@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { resolve } = require("path");
 var path = require("path");
 
 // Arrays
@@ -9,21 +10,29 @@ let categories = [];
 // ========== Read the contents of posts.json and categories.json and store them into arrays ==========
 function initialize() {
   return new Promise((resolve, reject) => {
-    fs.readFile(path.join(__dirname, "/data/posts.json"),"utf8",(err, data) => {
+    fs.readFile(
+      path.join(__dirname, "/data/posts.json"),
+      "utf8",
+      (err, data) => {
         if (err) {
           reject("Unable to read file");
         }
         posts = JSON.parse(data);
 
-        fs.readFile(path.join(__dirname, "/data/categories.json"),"utf8",(err, data) => {
+        fs.readFile(
+          path.join(__dirname, "/data/categories.json"),
+          "utf8",
+          (err, data) => {
             if (err) {
               reject("Unable to read file");
             }
             categories = JSON.parse(data);
 
             resolve();
-          });
-      });
+          }
+        );
+      }
+    );
   });
 }
 
@@ -67,4 +76,67 @@ function getCategories() {
   });
 }
 
-module.exports = { initialize, getAllPosts, getPublishedPosts, getCategories };
+// Adding a new post
+function addPost(postData) {
+  return new Promise((resolve, reject) => {
+    if (postData.published === undefined) {
+      postData.published = false;
+    } else {
+      postData.published = true;
+    }
+
+    postData.id = posts.length + 1;
+    posts.push(postData);
+    resolve(postData);
+  });
+}
+
+// ========== Get posts by category ==========
+function getPostsByCategory(category) {
+  return new Promise((resolve, reject) => {
+    const matchingPosts = posts.filter((post) => post.category == category);
+    if (matchingPosts.length > 0) {
+      resolve(matchingPosts);
+    } else {
+      reject("No results returned");
+    }
+  });
+}
+
+// ========== Get posts by minDate ==========
+function getPostsByMinDate(minDate) {
+  return new Promise((resolve, reject) => {
+    const matchingPosts = posts.filter(
+      (post) => new Date(post.postDate) >= new Date(minDate)
+    );
+    if (matchingPosts.length > 0) {
+      resolve(matchingPosts);
+    } else {
+      reject("No results returned");
+    }
+  });
+}
+
+// ========== Get posts by ID ==========
+function getPostById(id) {
+  return new Promise((resolve, reject) => {
+    const matchingPosts = posts.filter((post) => post.id == id);
+    const selectPost = matchingPosts[0];
+    if (selectPost) {
+      resolve(selectPost);
+    } else {
+      reject("No results returned");
+    }
+  });
+}
+
+module.exports = {
+  initialize,
+  getAllPosts,
+  getPublishedPosts,
+  getCategories,
+  addPost,
+  getPostsByCategory,
+  getPostsByMinDate,
+  getPostById,
+};

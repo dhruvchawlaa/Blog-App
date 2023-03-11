@@ -76,7 +76,7 @@ function getCategories() {
   });
 }
 
-// Adding a new post
+// ========== Adding a new post ==========
 function addPost(postData) {
   return new Promise((resolve, reject) => {
     if (postData.published === undefined) {
@@ -86,6 +86,10 @@ function addPost(postData) {
     }
 
     postData.id = posts.length + 1;
+    const date = new Date();
+    const formattedDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+
+    postData.postDate = formattedDate;
     posts.push(postData);
     resolve(postData);
   });
@@ -130,6 +134,20 @@ function getPostById(id) {
   });
 }
 
+// ========== Produces posts that are both published and filtered by category ==========
+function getPublishedPostsByCategory(category) {
+  return new Promise((resolve, reject) => {
+    const matchingPosts = posts.filter(
+      (post) => post.category == category && post.published === true
+    );
+    if (matchingPosts.length > 0) {
+      resolve(matchingPosts);
+    } else {
+      reject("No results returned");
+    }
+  });
+}
+
 module.exports = {
   initialize,
   getAllPosts,
@@ -139,4 +157,5 @@ module.exports = {
   getPostsByCategory,
   getPostsByMinDate,
   getPostById,
+  getPublishedPostsByCategory,
 };

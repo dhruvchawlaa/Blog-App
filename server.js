@@ -1,10 +1,10 @@
 /*********************************************************************************
- *  WEB322 – Assignment 04
+ *  WEB322 – Assignment 05
  *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part
  *  of this assignment has been copied manually or electronically from any other source
  *  (including 3rd party web sites) or distributed to other students.
  *
- *  Name: Dhruv Chawla Student ID: 158310219 Date: 19-Feb-2023
+ *  Name: Dhruv Chawla Student ID: 158310219 Date: 23-Mar-2023
  *
  *  Online (Cyclic) Link: https://lively-gray-quail.cyclic.app/
  *
@@ -29,6 +29,9 @@ const {
   getPostsByMinDate,
   getPostById,
   getPublishedPostsByCategory,
+  addCategory,
+  deleteCategoryById,
+  deletePostById,
 } = require("./blog-service.js");
 
 app.use(express.static("public"));
@@ -44,6 +47,8 @@ app.use(function (req, res, next) {
   app.locals.viewingCategory = req.query.category;
   next();
 });
+
+app.use(express.urlencoded({ extended: true }));
 
 app.engine(
   ".hbs",
@@ -72,6 +77,12 @@ app.engine(
       },
       safeHTML: function (context) {
         return stripJs(context);
+      },
+      formatDate: function (dateObj) {
+        let year = dateObj.getFullYear();
+        let month = (dateObj.getMonth() + 1).toString();
+        let day = dateObj.getDate().toString();
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       },
     },
   })
@@ -202,7 +213,9 @@ app.get("/posts", (req, res) => {
   if (req.query.category) {
     getPostsByCategory(req.query.category)
       .then((data) => {
-        res.render("posts", { posts: data });
+        data.length > 0
+          ? res.render("posts", { posts: data })
+          : res.render("posts", { message: "No Results" });
       })
       .catch((err) => {
         res.render("posts", { message: "no results" });
@@ -210,7 +223,9 @@ app.get("/posts", (req, res) => {
   } else if (req.query.minDate) {
     getPostsByMinDate(req.query.minDate)
       .then((data) => {
-        es.render("posts", { posts: data });
+        data.length > 0
+          ? res.render("posts", { posts: data })
+          : res.render("posts", { message: "No Results" });
       })
       .catch((err) => {
         res.render("posts", { message: "no results" });
@@ -218,7 +233,9 @@ app.get("/posts", (req, res) => {
   } else {
     getAllPosts()
       .then((data) => {
-        res.render("posts", { posts: data });
+        data.length > 0
+          ? res.render("posts", { posts: data })
+          : res.render("posts", { message: "No Results" });
       })
       .catch((err) => {
         res.render("posts", { message: "no results" });
@@ -241,19 +258,70 @@ app.get("/post/:value", (req, res) => {
 app.get("/categories", (req, res) => {
   getCategories()
     .then((data) => {
-      res.render("categories", { categories: data });
+      data.length > 0
+        ? res.render("categories", { categories: data })
+        : res.render("categories", { message: "No Results" });
     })
-    .catch((err) => {
+    .catch(() => {
       res.render("categories", { message: "no results" });
+    });
+});
+
+// ========== Add Categories Route ==========
+app.get("/categories/add", (req, res) => {
+  res.render("addCategory");
+});
+
+// ========== Add Categories Post Route ==========
+app.post("/categories/add", (req, res) => {
+  let catObject = {};
+  catObject.category = req.body.category;
+  console.log(req.body.category);
+  if (req.body.category != "") {
+    addCategory(catObject)
+      .then(() => {
+        res.redirect("/categories");
+      })
+      .catch(() => {
+        console.log("Error!");
+      });
+  }
+});
+
+// ========== Delete Category By ID Route ==========
+app.get("/categories/delete/:id", (req, res) => {
+  deleteCategoryById(req.params.id)
+    .then(() => {
+      res.redirect("/categories");
+    })
+    .catch(() => {
+      console.log("Unable to remove category / Category not found");
+    });
+});
+
+// ========== Delete Post By ID Route ==========
+app.get("/posts/delete/:id", (req, res) => {
+  deletePostById(req.params.id)
+    .then(() => {
+      res.redirect("/posts");
+    })
+    .catch(() => {
+      console.log("Unable to remove post / Post not found");
     });
 });
 
 // ========== Add Posts Page Route ==========
 app.get("/posts/add", (req, res) => {
-  res.render("addPost");
+  getCategories()
+    .then((categories) => {
+      res.render("addPost", { categories: categories });
+    })
+    .catch(() => {
+      res.render("addPost", { categories: [] });
+    });
 });
 
-// ========== Post Route ==========
+// ========== Add Posts (Post) Route ==========
 app.post("/posts/add", upload.single("featureImage"), (req, res) => {
   let streamUpload = (req) => {
     return new Promise((resolve, reject) => {
@@ -299,7 +367,7 @@ app.post("/posts/add", upload.single("featureImage"), (req, res) => {
 
 // ========== 404 Page Route ==========
 app.use((req, res) => {
-  res.render("404");
+  res.status(404).render("404");
 });
 
 // ========== Check the initialization and start listening ==========

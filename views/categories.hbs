@@ -1,10 +1,5 @@
-{{#unless categories}} 
-    <div class="col-md-12 text-center">
-    <strong>{{message}}</strong>
-  </div>
-{{/unless}}
-
-<h2>Categories</h2>
+<h2>Categories
+  <a href="/categories/add" class="btn btn-success pull-right">Add Category</a></h2>
 <hr />
 <div class="table-responsive">
   <table class="table">
@@ -14,17 +9,22 @@
         <th scope="col">Category Name</th>
       </tr>
     </thead>
-    <tbody>
+    {{#if categories}}
+      <tbody>
         {{#each categories}}
-      <tr>
-        <td><a href="/posts?category={{id}}">{{id}}</a></td>
-        <td><a href="/posts?category={{id}}">{{category}}</a></td>
-      </tr>
+          <tr>
+            <td><a href="/posts?category={{id}}">{{id}}</a></td>
+            <td><a href="/posts?category={{id}}">{{category}}</a></td>
+            <td><a href="categories/delete/{{id}}" class="btn btn-danger">Remove</a></td>
+          </tr>
+        {{/each}}
+      </tbody>
     {{else}}
-      <tr>
-        <td colspan="4">No Data Available</td>
-      </tr>
-    {{/each}}
-    </tbody>
+      <tbody>
+        <tr>
+          <td colspan="2" class="text-center">{{message}}</td>
+        </tr>
+      </tbody>
+    {{/if}}
   </table>
 </div>

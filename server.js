@@ -186,7 +186,7 @@ app.get("/blog", async (req, res) => {
 });
 
 // Display the latest blog post available by blog post id
-app.get("/blog/:id", ensureLogin, async (req, res) => {
+app.get("/blog/:id", async (req, res) => {
   // Declare an object to store properties for the view
   let viewData = {};
 
